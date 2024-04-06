@@ -133,12 +133,13 @@ public class CanaraRecorderService extends AccessibilityService {
 
         unfilteredTransactionInfo.removeIf(String::isEmpty);
         unfilteredTransactionInfo.remove("Pull down to refresh latest transaction..");
+        unfilteredTransactionInfo.remove("Load older transactions...");
 
         Log.d("Transaction Output", unfilteredTransactionInfo.toString());
 
 
         List<List<String>> subFilteredTransactionsList = new ArrayList<>();
-
+        unfilteredTransactionInfo.removeIf(String::isEmpty);
         for (int i = 0; i < unfilteredTransactionInfo.size(); i += 5) {
             String date = unfilteredTransactionInfo.get(i);
             String Amount = "";
@@ -269,7 +270,10 @@ public class CanaraRecorderService extends AccessibilityService {
     public void checkForSessionExpiry() {
         AccessibilityNodeInfo targetNode1 = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "Session Expired! Please LOGIN again", true, false);
         AccessibilityNodeInfo targetNode2 = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "Information", false, false);
-
+        AccessibilityNodeInfo targetNode3 = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "Please download latest app from playStore", true, false);
+        AccessibilityNodeInfo targetNode4 = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "Unable to process the request,Please try again.", true, false);
+        AccessibilityNodeInfo targetNode5 = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "MPin cannot be blank.", true, false);
+        AccessibilityNodeInfo targetNode6 = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "t responding", true, false);
         if (targetNode2 != null) {
             AccessibilityNodeInfo backButtonNode = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "Back", false, true);
             if (backButtonNode != null) {
@@ -279,15 +283,55 @@ public class CanaraRecorderService extends AccessibilityService {
                 loginOnce = true;
             }
             targetNode2.recycle();
+
         }
-        if (targetNode1 != null) {
+        if (targetNode1 != null || targetNode4 != null) {
             AccessibilityNodeInfo okButtonNode = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "OK", false, true);
-            okButtonNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            okButtonNode.recycle();
-            targetNode1.recycle();
-            loginOnce = false;
-            ticker.setNotIdle();
+            if (okButtonNode != null) {
+                okButtonNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                okButtonNode.recycle();
+                loginOnce = false;
+                ticker.setNotIdle();
+                relaunchApp();
+            }
+
         }
+
+        if (targetNode3 != null) {
+            AccessibilityNodeInfo backButtonNode1 = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "OK", false, true);
+            AccessibilityNodeInfo backButtonNode2 = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "UPDATE NOW", false, true);
+            if (backButtonNode1 != null) {
+                backButtonNode1.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                backButtonNode1.recycle();
+                ticker.setNotIdle();
+                loginOnce = false;
+                relaunchApp();
+            }
+            if (backButtonNode2 != null) {
+                backButtonNode2.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                backButtonNode2.recycle();
+                ticker.setNotIdle();
+                loginOnce = false;
+                relaunchApp();
+            }
+            targetNode3.recycle();
+        }
+        if (targetNode5 != null) {
+            relaunchApp();
+            targetNode5.recycle();
+        }
+        if (targetNode6 != null) {
+            Log.d("Inside", "Close app");
+            AccessibilityNodeInfo okButtonNode = findNodeByText(getTopMostParentNode(getRootInActiveWindow()), "Close app", false, true);
+            if (okButtonNode != null) {
+                okButtonNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                okButtonNode.recycle();
+                targetNode6.recycle();
+                ticker.setNotIdle();
+            }
+        }
+
+
     }
 
     private String printAllFlags() {
